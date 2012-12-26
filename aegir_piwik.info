@@ -1,1 +1,3 @@
 name = Aegir Piwik Integration
+description = Issues API calls to a Piwik installation at site install and verify.
+core = 6.x
