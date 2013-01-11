@@ -25,6 +25,16 @@ class PiwikAPI {
     return $response;
   }
 
+  /**
+   * Register a site in the Piwik instance.
+   * @param string $site_name
+   *  The site name to provide to piwik, e.g. "Example Site"
+   * @param array $urls
+   *  The URLs to associate with the site,
+   *  e.g. array('example.org', 'www.example.org', 'awesomealias.org')
+   * @return int
+   *  The ID which the Piwik instance assigns to the site.
+   */
   public function register_site($site_name, $urls) {
     $params = array();
     $params['siteName'] = $site_name;
@@ -35,7 +45,7 @@ class PiwikAPI {
 
     $response = $this->_execute_api_call('API', 'SitesManager.addSite',
         $params);
-    $site_id = (int) $response->data_decoded['value'];
+    $site_id = (int) $response->data_decoded->value;
 
     return $site_id;
   }
