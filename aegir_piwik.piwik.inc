@@ -66,16 +66,31 @@ class PiwikAPI {
     return $users;
   }
 
+  /**
+   * Give the specified user admin access to the specified site.
+   * @param int $site_id
+   *  The Piwik instance's ID for a site.
+   * @param string $user
+   *  The username of a user in the Piwik instance.
+   */
   public function set_user_access($site_id, $user) {
     $params = array();
     $params['userLogin'] = $user;
     $params['access'] = 'admin';
-    $params['idSite'] = $site_id;
+    $params['idSites'] = $site_id;
 
     $this->_execute_api_call('API', 'UsersManager.setUserAccess', $params);
     return ;
   }
 
+  /**
+   * Add aliases to a site.
+   * @param int $site_id
+   *  The Piwik instance's ID for a site.
+   * @param array $urls
+   *  The URLs to add to the site,
+   *  e.g. array('example2.org', 'www.example2.org', 'awesomealias2.org')
+   */
   public function add_site_alias_urls($site_id, $urls) {
     $params = array();
     $params['idSite'] = $site_id;
