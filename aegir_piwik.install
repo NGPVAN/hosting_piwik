@@ -1,0 +1,82 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the aegir_piwik module.
+ */
+
+/**
+ * Implementation of hook_schema().
+ */
+function aegir_piwik_schema() {
+  $schema = array();
+
+  $schema['aegir_piwik_sites'] = array(
+    'description' => t('Piwik site ID for each Aegir site.'),
+    'fields' => array(
+      'vid' => array(
+        'description' => t('Site {node}.vid'),
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'nid' => array(
+        'description' => t('Site {node}.nid'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'piwik_site_id' => array(
+        'description' => t('ID assigned to the site by Piwik upon registration'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('vid'),
+  );
+
+  $schema['aegir_piwik_site_aliases'] = array(
+    'description' => t('The URL aliases for a site which have been ' .
+         'registered with Piwik.'),
+    'fields' => array(
+      'vid' => array(
+        'description' => t('Site {node}.vid'),
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'nid' => array(
+        'description' => t('Site {node}.nid'),
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'piwik_site_alias' => array(
+        'description' => t('A URL alias that has been registered with Piwik'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE
+      ),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implementation of hook_install().
+ */
+function aegir_piwik_install() {
+  drupal_install_schema('aegir_piwik');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function aegir_piwik_uninstall() {
+  drupal_uninstall_schema('aegir_piwik');
+}
