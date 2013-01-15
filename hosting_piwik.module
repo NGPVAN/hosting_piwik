@@ -3,23 +3,23 @@
 /**
  * Implementation of hook_perm()
  */
-function aegir_piwik_perm() {
+function hosting_piwik_perm() {
   return array('administer piwik');
 }
 
 /**
  * Implementation of hook_menu()
  */
-function aegir_piwik_menu() {
+function hosting_piwik_menu() {
 
   $items = array();
   
   $items['admin/hosting/piwik'] = array(
     'title' => t('Piwik'),
     'access arguments' => array('administer piwik'),
-    'file' => 'aegir_piwik.admin.inc',
+    'file' => 'hosting_piwik.admin.inc',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('aegir_piwik_settings'),    
+    'page arguments' => array('hosting_piwik_settings'),    
   );
 
   return $items;
@@ -29,8 +29,8 @@ function aegir_piwik_menu() {
 /**
  * Implementation of hook_insert()
  */
-function aegir_piwik_insert($node) {
-  db_query("INSERT INTO {aegir_piwik_piwik}
+function hosting_piwik_insert($node) {
+  db_query("INSERT INTO {hosting_piwik_piwik}
              (vid, nid, access_token)
              VALUES (%d, %d, '%s')", $node->vid, $node->nid, $node->monitoring_access_token);
 }
@@ -38,27 +38,27 @@ function aegir_piwik_insert($node) {
 /**
  * Implementation of hook_update()
  */
-function aegir_piwik_update($node) {
+function hosting_piwik_update($node) {
   //add if needed
 }
 
 /**
  * Implementation of hook_delete()
  */
-function aegir_piwik_delete($node) {
-  db_query("DELETE FROM {aegir_piwik_piwik}
+function hosting_piwik_delete($node) {
+  db_query("DELETE FROM {hosting_piwik_piwik}
             WHERE nid=%d", $node->nid);
 }
 
 /**
  * Implementation of hook_delete_revision()
  */
-function aegir_piwik_delete_revision($node) {
-  db_query("DELETE FROM {aegir_piwik_piwik}
+function hosting_piwik_delete_revision($node) {
+  db_query("DELETE FROM {hosting_piwik_piwik}
             WHERE vid=%d", $node->vid);
 }
 
-function aegir_piwik_load($node) {
+function hosting_piwik_load($node) {
   $site_aliases = array();
   $resource = db_query("SELECT alias
                         FROM {hosting_site_alias}
@@ -69,14 +69,14 @@ function aegir_piwik_load($node) {
 
   $additions['monitoring_access_token'] = db_result(
       db_query("SELECT access_token
-                FROM {aegir_piwik_piwik}
+                FROM {hosting_piwik_piwik}
                 WHERE nid=%d", $node->nid)
   );
   $additions['site_aliases'] = $site_aliases;
 
-  module_load_include('inc', 'aegir_piwik',
-                      'aegir_piwik.db');
-  $additions['piwik_site_id'] = aegir_piwik_get_piwik_id($node->nid);
+  module_load_include('inc', 'hosting_piwik',
+                      'hosting_piwik.db');
+  $additions['piwik_site_id'] = hosting_piwik_get_piwik_id($node->nid);
 
   return $additions;
 }
@@ -84,23 +84,23 @@ function aegir_piwik_load($node) {
 /**
  * Implementation of hook_nodeapi()
  */
-function aegir_piwik_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+function hosting_piwik_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   if ($node->type == 'site') {
     switch ($op) {
       case 'insert':
-        aegir_piwik_insert($node);
+        hosting_piwik_insert($node);
         break;
       case 'update':
-        aegir_piwik_update($node);
+        hosting_piwik_update($node);
         break;
       case 'delete' :
-        aegir_piwik_delete($node);
+        hosting_piwik_delete($node);
         break;
       case 'delete revision':
-        aegir_piwik_delete_revision($node);
+        hosting_piwik_delete_revision($node);
         break;
       case 'load':
-        return aegir_piwik_load($node);
+        return hosting_piwik_load($node);
         break;
     }
   }
