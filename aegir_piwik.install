@@ -2,16 +2,16 @@
 
 /**
  * @file
- * Install, update and uninstall functions for the aegir_piwik module.
+ * Install, update and uninstall functions for the hosting_piwik module.
  */
 
 /**
  * Implementation of hook_schema().
  */
-function aegir_piwik_schema() {
+function hosting_piwik_schema() {
   $schema = array();
 
-  $schema['aegir_piwik_sites'] = array(
+  $schema['hosting_piwik_sites'] = array(
     'description' => t('Piwik site ID for each Aegir site.'),
     'fields' => array(
       'vid' => array(
@@ -38,7 +38,7 @@ function aegir_piwik_schema() {
     'primary key' => array('vid'),
   );
 
-  $schema['aegir_piwik_site_aliases'] = array(
+  $schema['hosting_piwik_site_aliases'] = array(
     'description' => t('The URL aliases for a site which have been ' .
          'registered with Piwik.'),
     'fields' => array(
@@ -70,13 +70,13 @@ function aegir_piwik_schema() {
 /**
  * Implementation of hook_install().
  */
-function aegir_piwik_install() {
-  drupal_install_schema('aegir_piwik');
+function hosting_piwik_install() {
+  drupal_install_schema('hosting_piwik');
 }
 
 /**
  * Implementation of hook_uninstall().
  */
-function aegir_piwik_uninstall() {
-  drupal_uninstall_schema('aegir_piwik');
+function hosting_piwik_uninstall() {
+  drupal_uninstall_schema('hosting_piwik');
 }
