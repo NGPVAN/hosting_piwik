@@ -13,13 +13,13 @@ function hosting_piwik_perm() {
 function hosting_piwik_menu() {
 
   $items = array();
-  
+
   $items['admin/hosting/piwik'] = array(
     'title' => t('Piwik'),
     'access arguments' => array('administer piwik'),
     'file' => 'hosting_piwik.admin.inc',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('hosting_piwik_settings'),    
+    'page arguments' => array('hosting_piwik_settings'),
   );
 
   return $items;
@@ -27,26 +27,12 @@ function hosting_piwik_menu() {
 
 
 /**
- * Implementation of hook_insert()
- */
-function hosting_piwik_insert($node) {
-  db_query("INSERT INTO {hosting_piwik_piwik}
-             (vid, nid, access_token)
-             VALUES (%d, %d, '%s')", $node->vid, $node->nid, $node->monitoring_access_token);
-}
-
-/**
- * Implementation of hook_update()
- */
-function hosting_piwik_update($node) {
-  //add if needed
-}
-
-/**
  * Implementation of hook_delete()
  */
 function hosting_piwik_delete($node) {
-  db_query("DELETE FROM {hosting_piwik_piwik}
+  db_query("DELETE FROM {hosting_piwik_sites}
+            WHERE nid=%d", $node->nid);
+  db_query("DELETE FROM {hosting_piwik_site_aliases}
             WHERE nid=%d", $node->nid);
 }
 
@@ -54,7 +40,9 @@ function hosting_piwik_delete($node) {
  * Implementation of hook_delete_revision()
  */
 function hosting_piwik_delete_revision($node) {
-  db_query("DELETE FROM {hosting_piwik_piwik}
+  db_query("DELETE FROM {hosting_piwik_sites}
+            WHERE vid=%d", $node->vid);
+  db_query("DELETE FROM {hosting_piwik_site_aliases}
             WHERE vid=%d", $node->vid);
 }
 
@@ -67,15 +55,7 @@ function hosting_piwik_load($node) {
     $site_aliases[] = $row;
   }
 
-  $additions['monitoring_access_token'] = db_result(
-      db_query("SELECT access_token
-                FROM {hosting_piwik_piwik}
-                WHERE nid=%d", $node->nid)
-  );
   $additions['site_aliases'] = $site_aliases;
-
-  module_load_include('inc', 'hosting_piwik',
-                      'hosting_piwik.db');
   $additions['piwik_site_id'] = hosting_piwik_get_piwik_id($node->nid);
 
   return $additions;
@@ -87,12 +67,6 @@ function hosting_piwik_load($node) {
 function hosting_piwik_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   if ($node->type == 'site') {
     switch ($op) {
-      case 'insert':
-        hosting_piwik_insert($node);
-        break;
-      case 'update':
-        hosting_piwik_update($node);
-        break;
       case 'delete' :
         hosting_piwik_delete($node);
         break;
@@ -104,5 +78,13 @@ function hosting_piwik_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         break;
     }
   }
+}
+
+function hosting_piwik_get_piwik_id($nid) {
+  return (int) db_result(db_query("
+    SELECT piwik_site_id
+    FROM {hosting_piwik_sites}
+    WHERE nid = %d
+  ", $nid));
 }
 

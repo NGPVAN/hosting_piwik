@@ -98,8 +98,11 @@ class PiwikAPI {
   public function add_site_alias_urls($site_id, $urls) {
     $params = array();
     $params['idSite'] = $site_id;
-    for ($i = 0; $i < count($urls); $i++) {
-      $params["urls[$i]"] = $urls[$i];
+
+    $ind = 0;
+    foreach ($urls as $url) {
+      $params["urls[$ind]"] = $url;
+      $ind++;
     }
 
     $this->_execute_api_call('API', 'SitesManager.addSiteAliasUrls', $params);

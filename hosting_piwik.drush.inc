@@ -9,21 +9,21 @@ function drush_hosting_piwik_pre_hosting_task() {
 
   if ($task->ref->type == 'site' && $task->task_type == 'install') {
     module_load_include('inc', 'hosting_piwik', 'hosting_piwik.piwik');
-    $piwik_api = new PiwikAPI(variable_get('hosting_piwik_base_url', ''), 
+    $piwik_api = new PiwikAPI(variable_get('hosting_piwik_base_url', ''),
         variable_get('hosting_piwik_token', ''));
 
     $piwik_site_id = $piwik_api->register_site(
         $task->ref->hosting_name, $task->ref->aliases);
-    
+
     $users = $piwik_api->get_all_users();
     foreach ($users as $user) {
       if ($user == 'anonymous') {
         continue;
       }
-      
+
       $piwik_api->set_user_access($piwik_site_id, $user);
     }
-    
+
     hosting_piwik_write_to_piwik_table($task, $piwik_site_id);
     hosting_piwik_write_to_piwik_alias_table($task);
 
@@ -32,14 +32,14 @@ function drush_hosting_piwik_pre_hosting_task() {
   }
 
   if ($task->ref->type == 'site' && $task->task_type == 'verify') {
+    $task->options['piwik_site_id'] = $task->ref->piwik_site_id;
+    $task->options['site_aliases'] = $task->ref->aliases;
+
     module_load_include('inc', 'hosting_piwik', 'hosting_piwik.piwik');
-    $piwik_api = new PiwikAPI(variable_get('hosting_piwik_base_url', ''), 
+    $piwik_api = new PiwikAPI(variable_get('hosting_piwik_base_url', ''),
         variable_get('hosting_piwik_token', ''));
 
     hosting_piwik_register_new_aliases($task, $piwik_api);
-    
-    $task->options['piwik_site_id'] = $task->ref->piwik_site_id;
-    $task->options['site_aliases'] = $task->ref->aliases;
   }
 
 }
@@ -82,7 +82,7 @@ function hosting_piwik_write_to_piwik_alias_table($task) {
 
 function hosting_piwik_register_new_aliases($task, $piwik_api) {
   $new_aliases = hosting_piwik_get_new_aliases($task);
-  $site_id = drush_get_option('piwik_site_id', '');
+  $site_id = $task->ref->piwik_site_id;
 
   if (!$new_aliases) {
     return;
@@ -106,8 +106,8 @@ function hosting_piwik_get_registered_piwik_aliases($task) {
   $res = db_query($sql, $task->ref->vid);
 
   $registered_aliases = array();
-  while ($row = db_fetch_array($res)) {
-    $registered_aliases[] = $row;
+  while ($row = db_fetch_object($res)) {
+    $registered_aliases[] = $row->piwik_site_alias;
   }
 
   return $registered_aliases;
