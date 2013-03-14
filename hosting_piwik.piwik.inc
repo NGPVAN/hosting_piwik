@@ -59,7 +59,11 @@ class PiwikAPI {
     $params = array();
     $response = $this->_execute_api_call('API', 'UsersManager.getUsersLogin',
         $params);
+
     $response_decoded = $response->data_decoded;
+    if (!is_array($response_decoded)) {
+      return array();
+    }
 
     $users = array_map(create_function('$u', 'return $u[0];'),
       $response_decoded);
