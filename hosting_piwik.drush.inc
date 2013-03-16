@@ -52,9 +52,11 @@ function drush_hosting_piwik_pre_hosting_task() {
  */
 function hosting_piwik_provision_drupal_config($uri, $data) {
   $site_aliases = drush_get_option('site_aliases', '');
-  $piwik_site_id = drush_get_option('piwik_site_id', '');
+  $piwik_site_id = (int) drush_get_option('piwik_site_id', '');
 
-  $settings .= '$' . "conf['piwik_site_id'] = " . $piwik_site_id . ";\n";
+  if ($piwik_site_id) {
+    $settings .= '$' . "conf['piwik_site_id'] = " . $piwik_site_id . ";\n";
+  }
   $settings .= '$' . "conf['site_aliases'] = array(\n";
 
   foreach ($site_aliases as $key => $value) {
