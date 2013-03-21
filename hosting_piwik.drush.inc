@@ -57,12 +57,14 @@ function hosting_piwik_provision_drupal_config($uri, $data) {
   if ($piwik_site_id) {
     $settings .= '$' . "conf['piwik_site_id'] = " . $piwik_site_id . ";\n";
   }
-  $settings .= '$' . "conf['site_aliases'] = array(\n";
 
-  foreach ($site_aliases as $key => $value) {
-    $settings .= "$key => '$value',\n";
+  if (is_array($site_aliases)) {
+    $settings .= '$' . "conf['site_aliases'] = array(\n";
+    foreach ($site_aliases as $key => $value) {
+      $settings .= "$key => '$value',\n";
+    }
+    $settings .= ");\n";
   }
-  $settings .= ");\n";
 
   return $settings;
 }
