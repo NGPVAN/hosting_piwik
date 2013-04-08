@@ -7,41 +7,44 @@ function drush_hosting_piwik_pre_hosting_task() {
 
   $task = & drush_get_context('HOSTING_TASK');
 
-  if ($task->ref->type == 'site' && $task->task_type == 'install') {
-    module_load_include('inc', 'hosting_piwik', 'hosting_piwik.piwik');
-    $piwik_api = new PiwikAPI(variable_get('hosting_piwik_base_url', ''),
-        variable_get('hosting_piwik_token', ''));
+  if ($task->ref->type == 'site' && 
+      ($task->task_type == 'install') || ($task->task_type == 'verify')) {
+    
+    if (intval($task->ref->piwik_site_id) == 0) {
+      module_load_include('inc', 'hosting_piwik', 'hosting_piwik.piwik');
+      $piwik_api = new PiwikAPI(variable_get('hosting_piwik_base_url', ''),
+          variable_get('hosting_piwik_token', ''));
 
-    $piwik_site_id = $piwik_api->register_site(
-        $task->ref->hosting_name, $task->ref->aliases);
+      $piwik_site_id = $piwik_api->register_site(
+          $task->ref->hosting_name, $task->ref->aliases);
 
-    $users = $piwik_api->get_all_users();
-    foreach ($users as $user) {
-      if ($user == 'anonymous') {
-        continue;
+      $users = $piwik_api->get_all_users();
+      foreach ($users as $user) {
+        if ($user == 'anonymous') {
+          continue;
+        }
+
+        $piwik_api->set_user_access($piwik_site_id, $user);
       }
 
-      $piwik_api->set_user_access($piwik_site_id, $user);
+      hosting_piwik_write_to_piwik_table($task, $piwik_site_id);
+      $task->options['piwik_site_id'] = $piwik_site_id;
     }
-
-    hosting_piwik_write_to_piwik_table($task, $piwik_site_id);
+    else {
+      $task->options['piwik_site_id'] = $task->ref->piwik_site_id;
+    }
+    
     hosting_piwik_write_to_piwik_alias_table($task);
-
-    $task->options['piwik_site_id'] = $piwik_site_id;
     $task->options['site_aliases'] = $task->ref->aliases;
   }
 
   if ($task->ref->type == 'site' && $task->task_type == 'verify') {
-    $task->options['piwik_site_id'] = $task->ref->piwik_site_id;
-    $task->options['site_aliases'] = $task->ref->aliases;
-
     module_load_include('inc', 'hosting_piwik', 'hosting_piwik.piwik');
     $piwik_api = new PiwikAPI(variable_get('hosting_piwik_base_url', ''),
         variable_get('hosting_piwik_token', ''));
 
     hosting_piwik_register_new_aliases($task, $piwik_api);
   }
-
 }
 
 /**
@@ -54,7 +57,7 @@ function hosting_piwik_provision_drupal_config($uri, $data) {
   $site_aliases = drush_get_option('site_aliases', '');
   $piwik_site_id = (int) drush_get_option('piwik_site_id', '');
 
-  if ($piwik_site_id) {
+  if ($piwik_site_id > 0) {
     $settings .= '$' . "conf['piwik_site_id'] = " . $piwik_site_id . ";\n";
   }
 

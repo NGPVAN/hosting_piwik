@@ -61,6 +61,27 @@ function hosting_piwik_load($node) {
   return $additions;
 }
 
+function hosting_piwik_update($node) {
+  
+  $override_site_id = (int) $node->hosting_piwik_site_id;
+  if ($override_site_id == 0) {
+    return ;
+  }
+  
+  $has_entry = (int) db_result(
+      db_query("SELECT nid FROM {hosting_piwik_sites} WHERE nid = %d", 
+          $node->nid));
+  
+  if ($has_entry) {
+    return ;
+  }
+
+  db_query("INSERT INTO {hosting_piwik_sites} (vid, nid, piwik_site_id)
+            VALUES (%d, %d, %d)",
+            $node->vid, $node->nid, $override_site_id);
+  
+}
+
 /**
  * Implementation of hook_nodeapi()
  */
@@ -76,6 +97,16 @@ function hosting_piwik_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       case 'load':
         return hosting_piwik_load($node);
         break;
+      case 'view':
+       $node->content['hosting_piwik_site_id'] = array(
+         '#type'    => 'item',
+         '#title'   => 'Piwik Site ID',
+         '#value'   => (int) $node->piwik_site_id,
+       );
+      case 'insert': // NB intentional fall-through
+      case 'update':
+        hosting_piwik_update($node);
+        break;
     }
   }
 }
@@ -88,3 +119,28 @@ function hosting_piwik_get_piwik_id($nid) {
   ", $nid));
 }
 
+function hosting_piwik_form_site_node_form_alter(&$form, &$form_state, $form_id) {
+
+  $form['hosting_piwik_site_id'] = array(
+    '#type'          => 'textfield',
+    '#title'         => t('Piwik Site ID'),
+    '#description'   => 
+      t('Override normal Piwik site creation behavior.  ' .
+          'If a positive integer is entered, no Piwik site will be created, ' .
+          'and the specified integer will be used as the Piwik site ID. ' .
+          'If a negative number is entered, no Piwik site will be created, ' .
+          'and no Piwik site ID will be provided in settings.php. ' .
+          'Leave blank or enter 0 to auto-create a Piwik site and to use ' .
+          'the auto-created site ID in settings.php.'),
+    '#required'      => FALSE,
+  );
+
+  if (!empty($form['#node'])) {
+    $node = $form['#node'];
+    if (is_object($node) && isset($node->piwik_site_id)) {
+      $form['hosting_piwik_site_id']['#default_value'] = $node->piwik_site_id;
+      $form['hosting_piwik_site_id']['#disabled'] = TRUE;
+    }
+  }
+
+}
