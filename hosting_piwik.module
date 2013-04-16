@@ -119,7 +119,8 @@ function hosting_piwik_get_piwik_id($nid) {
   ", $nid));
 }
 
-function hosting_piwik_form_site_node_form_alter(&$form, &$form_state, $form_id) {
+function hosting_piwik_form_site_node_form_alter(&$form, &$form_state,
+    $form_id) {
 
   $form['hosting_piwik_site_id'] = array(
     '#type'          => 'textfield',
