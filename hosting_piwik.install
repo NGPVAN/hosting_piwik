@@ -30,7 +30,7 @@ function hosting_piwik_schema() {
       'piwik_site_id' => array(
         'description' => t('ID assigned to the site by Piwik upon registration'),
         'type' => 'int',
-        'unsigned' => TRUE,
+        'unsigned' => FALSE,
         'not null' => TRUE,
         'default' => 0,
       ),
@@ -80,3 +80,21 @@ function hosting_piwik_install() {
 function hosting_piwik_uninstall() {
   drupal_uninstall_schema('hosting_piwik');
 }
+
+function hosting_piwik_update_6101() {
+  $ret = array();
+
+  $spec = array(
+    'description' => t('ID assigned to the site by Piwik upon registration'),
+    'type' => 'int',
+    'unsigned' => FALSE,
+    'not null' => TRUE,
+    'default' => 0,
+  );
+
+  db_change_field($ret, 'hosting_piwik_sites', 'piwik_site_id',
+    'piwik_site_id', $spec);
+
+  return $ret;
+}
+
