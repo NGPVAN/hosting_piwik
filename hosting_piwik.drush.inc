@@ -7,26 +7,31 @@ function drush_hosting_piwik_pre_hosting_task() {
 
   $task = & drush_get_context('HOSTING_TASK');
 
-  if ($task->ref->type == 'site' && 
+  if ($task->ref->type == 'site' &&
       ($task->task_type == 'install') || ($task->task_type == 'verify')) {
-    
-    if (intval($task->ref->piwik_site_id) == 0) {
+
+    $task_piwik_site_id = (int) $task->ref->piwik_site_id;
+    if ($task_piwik_site_id == 0) {
       $piwik_site_id = _hosting_piwik_create_new_piwik_site(
         $task->ref->hosting_name, $task->ref->aliases);
       hosting_piwik_write_to_piwik_table($task, $piwik_site_id);
       $task->options['piwik_site_id'] = $piwik_site_id;
     }
     else {
-      $task->options['piwik_site_id'] = $task->ref->piwik_site_id;
+      $task->options['piwik_site_id'] = $task_piwik_site_id;
     }
-    
+
     hosting_piwik_write_to_piwik_alias_table($task);
     $task->options['site_aliases'] = $task->ref->aliases;
   }
 
   if ($task->ref->type == 'site' && $task->task_type == 'verify') {
-    hosting_piwik_register_new_aliases($task->ref->vid, 
-        $task->ref->piwik_site_id, $task->ref->aliases);
+    $piwik_site_id = hosting_piwik_get_piwik_id($task->ref->nid);
+
+    if ($piwik_site_id > 0) {
+      hosting_piwik_register_new_aliases($task->ref->vid,
+        $piwik_site_id, $task->ref->aliases);
+    }
   }
 }
 
@@ -40,6 +45,7 @@ function hosting_piwik_provision_drupal_config($uri, $data) {
   $site_aliases = drush_get_option('site_aliases', '');
   $piwik_site_id = (int) drush_get_option('piwik_site_id', '');
 
+  $settings = '';
   if ($piwik_site_id > 0) {
     $settings .= '$' . "conf['piwik_site_id'] = " . $piwik_site_id . ";\n";
   }
@@ -56,9 +62,24 @@ function hosting_piwik_provision_drupal_config($uri, $data) {
 }
 
 function hosting_piwik_write_to_piwik_table($task, $site_id) {
-  db_query("INSERT INTO {hosting_piwik_sites} (vid, nid, piwik_site_id)
-            VALUES (%d, %d, %d)",
-            $task->ref->vid, $task->ref->nid, $site_id);
+  $has_entry = (int) db_result(db_query("
+    SELECT vid
+    FROM {hosting_piwik_sites}
+    WHERE vid = %d",
+    $task->ref->vid
+  ));
+
+  $rec = new stdClass;
+  $rec->vid = $task->ref->vid;
+  $rec->nid = $task->ref->nid;
+  $rec->piwik_site_id = $site_id;
+
+  $update = array();
+  if ($has_entry) {
+    $update = array('vid');
+  }
+
+  drupal_write_record('hosting_piwik_sites', $rec, $update);
 }
 
 function hosting_piwik_write_to_piwik_alias_table($task) {
@@ -112,7 +133,7 @@ function _hosting_piwik_create_new_piwik_site($site_name, $site_aliases) {
  */
 function hosting_piwik_register_new_aliases($vid, $piwik_site_id,
     $all_aliases) {
-  
+
   $new_aliases = hosting_piwik_get_new_aliases($vid, $all_aliases);
 
   if (!$new_aliases) {
@@ -148,7 +169,7 @@ function hosting_piwik_get_registered_piwik_aliases($vid) {
   $sql = "SELECT piwik_site_alias
             FROM {hosting_piwik_site_aliases}
             WHERE vid = %d;";
-  $res = db_query($sql, $task->ref->vid);
+  $res = db_query($sql, $vid);
 
   $registered_aliases = array();
   while ($row = db_fetch_object($res)) {
