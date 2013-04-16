@@ -62,16 +62,16 @@ function hosting_piwik_load($node) {
 }
 
 function hosting_piwik_update($node) {
-  
+
   $override_site_id = (int) $node->hosting_piwik_site_id;
   if ($override_site_id == 0) {
     return ;
   }
-  
+
   $has_entry = (int) db_result(
-      db_query("SELECT nid FROM {hosting_piwik_sites} WHERE nid = %d", 
+      db_query("SELECT nid FROM {hosting_piwik_sites} WHERE nid = %d",
           $node->nid));
-  
+
   if ($has_entry) {
     return ;
   }
@@ -79,7 +79,7 @@ function hosting_piwik_update($node) {
   db_query("INSERT INTO {hosting_piwik_sites} (vid, nid, piwik_site_id)
             VALUES (%d, %d, %d)",
             $node->vid, $node->nid, $override_site_id);
-  
+
 }
 
 /**
@@ -119,13 +119,11 @@ function hosting_piwik_get_piwik_id($nid) {
   ", $nid));
 }
 
-function hosting_piwik_form_site_node_form_alter(&$form, &$form_state,
-    $form_id) {
-
+function hosting_piwik_form_site_node_form_alter(&$form, &$form_state) {
   $form['hosting_piwik_site_id'] = array(
     '#type'          => 'textfield',
     '#title'         => t('Piwik Site ID'),
-    '#description'   => 
+    '#description'   =>
       t('Override normal Piwik site creation behavior.  ' .
           'If a positive integer is entered, no Piwik site will be created, ' .
           'and the specified integer will be used as the Piwik site ID. ' .
