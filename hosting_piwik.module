@@ -136,7 +136,13 @@ function hosting_piwik_form_site_node_form_alter(&$form, &$form_state) {
 
   if (!empty($form['#node'])) {
     $node = $form['#node'];
-    if (is_object($node) && isset($node->piwik_site_id)) {
+
+    // Sites which existed before this module was turned on should get the
+    // same override functionality that newly-installed sites get.  Sites
+    // which already "decided" what their Piwik site ID should not get to
+    // change it, because that's pretty tricky to implement.
+    if (is_object($node) && isset($node->piwik_site_id) &&
+        (intval($node->piwik_site_id) != 0)) {
       $form['piwik_site_id']['#default_value'] = $node->piwik_site_id;
       $form['piwik_site_id']['#disabled'] = TRUE;
     }

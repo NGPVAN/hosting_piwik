@@ -10,27 +10,21 @@ function drush_hosting_piwik_pre_hosting_task() {
   if ($task->ref->type == 'site' &&
       ($task->task_type == 'install') || ($task->task_type == 'verify')) {
 
-    $task_piwik_site_id = (int) $task->ref->piwik_site_id;
-    if ($task_piwik_site_id == 0) {
+    $piwik_site_id = (int) $task->ref->piwik_site_id;
+    $task->options['piwik_site_id'] = $piwik_site_id;
+    $task->options['site_aliases'] = $task->ref->aliases;
+
+    if ($piwik_site_id == 0) {
       $piwik_site_id = _hosting_piwik_create_new_piwik_site(
         $task->ref->hosting_name, $task->ref->aliases);
       hosting_piwik_write_to_piwik_table($task, $piwik_site_id);
       $task->options['piwik_site_id'] = $piwik_site_id;
+      hosting_piwik_write_to_piwik_alias_table($task);
     }
-    else {
-      $task->options['piwik_site_id'] = $task_piwik_site_id;
-    }
-
-    hosting_piwik_write_to_piwik_alias_table($task);
-    $task->options['site_aliases'] = $task->ref->aliases;
-  }
-
-  if ($task->ref->type == 'site' && $task->task_type == 'verify') {
-    $piwik_site_id = hosting_piwik_get_piwik_id($task->ref->nid);
-
-    if ($piwik_site_id > 0) {
-      hosting_piwik_register_new_aliases($task->ref->vid,
-        $piwik_site_id, $task->ref->aliases);
+    else if ($piwik_site_id > 0) {
+      hosting_piwik_register_new_aliases($task->ref->vid, $piwik_site_id,
+        $task->ref->aliases);
+      hosting_piwik_write_to_piwik_alias_table($task);
     }
   }
 }
@@ -84,11 +78,22 @@ function hosting_piwik_write_to_piwik_table($task, $site_id) {
 
 function hosting_piwik_write_to_piwik_alias_table($task) {
   $site_aliases = $task->ref->aliases;
-  foreach ($site_aliases as $alias)
+  foreach ($site_aliases as $alias) {
+    $has_entry = (int) db_result(db_query("
+      SELECT vid
+      FROM {hosting_piwik_site_aliases}
+      WHERE vid = %d AND piwik_site_alias = '%s'
+    ", $task->ref->vid, $alias));
+
+    if ($has_entry) {
+      continue;
+    }
+
     db_query("INSERT INTO {hosting_piwik_site_aliases}
               (vid, nid, piwik_site_alias)
               VALUES (%d, %d, '%s');",
               $task->ref->vid, $task->ref->nid, $alias);
+  }
 }
 
 /**
