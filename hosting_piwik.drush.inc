@@ -8,7 +8,7 @@ function drush_hosting_piwik_pre_hosting_task() {
   $task = & drush_get_context('HOSTING_TASK');
 
   if ($task->ref->type == 'site' &&
-      ($task->task_type == 'install') || ($task->task_type == 'verify')) {
+      (($task->task_type == 'install') || ($task->task_type == 'verify'))) {
 
     $piwik_site_id = (int) $task->ref->piwik_site_id;
     $task->options['piwik_site_id'] = $piwik_site_id;
