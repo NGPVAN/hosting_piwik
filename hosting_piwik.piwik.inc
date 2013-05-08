@@ -45,8 +45,9 @@ class PiwikAPI {
       $i++;
     }
 
-    for ( ; $i < count($urls); $i++) {
-      $params["urls[$i]"] = $urls[$i];
+    foreach ($urls as $url) {
+      $params["urls[$i]"] = $url;
+      $i++;
     }
 
     $response = $this->_execute_api_call('API', 'SitesManager.addSite',
