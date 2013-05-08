@@ -39,7 +39,13 @@ class PiwikAPI {
     $params = array();
     $params['siteName'] = $site_name;
 
-    for ($i = 0; $i < count($urls); $i++) {
+    $i = 0;
+    if (_hosting_valid_fqdn($site_name)) {
+      $params["urls[0]"] = $site_name;
+      $i++;
+    }
+
+    for ( ; $i < count($urls); $i++) {
       $params["urls[$i]"] = $urls[$i];
     }
 
